@@ -6,6 +6,7 @@ var logger = require('morgan');
 
 const userRouter = require("./user/user.route")
 const usersRouter = require("./user/users.route")
+const todoListRouter = require("./todolist/todolist.route")
 const mongoose = require('mongoose');
 const config = require("config");
 const jwt = require('express-jwt')({
@@ -28,6 +29,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/user', userRouter);
+
+app.use('/todolist', jwt, todoListRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
