@@ -1,4 +1,5 @@
 const FriendRequest = require("./friend_requests.model");
+const User = require("../user/user.model")
 const { internalErr, makeResponse } = require("../utils");
 
 /**
@@ -30,7 +31,15 @@ const create = async ({ body: { raised_by, raised_to } }, res) => {
  */
 const accept = async ({ params: { request_id } }, res) => {
   try {
-    // const friendRequest = await
+    // get the friend request
+    const friendRequest = await FriendRequest.findById(request_id);
+    // update the friend list of user who raised the request
+    const session = await User.startSession();
+    await User.updateOne({ _id: friendRequest.raised_by }, { $push: { friends: friendRequest.raised_to } }).session(session)
+    await User.updateOne({ _id: friendRequest.raised_to }, { $push: { friends: friendRequest.raised_by } }).session(session)
+    await friendRequest.update({ status: "accepted" }).session(session);
+    res.send(makeResponse({ accepted: request_id }));
+    // update the friend list of user who accepted the request
   } catch (error) {
     console.log("errr ::: ", error);
     internalErr(res);
