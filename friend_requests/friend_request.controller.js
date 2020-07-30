@@ -46,6 +46,39 @@ const accept = async ({ params: { request_id } }, res) => {
   }
 };
 
+/**
+ * @route
+ * @param {Object} req
+ * @param {Object} res
+ * @description this will fetch pending request
+ */
+const getAllPendingRequests = async ({ user: { id } }, res) => {
+  try {
+    console.log("raised to ::: ", id)
+    const friendRequests = await FriendRequest.find({ raised_to: id, status: "created" }).populate("raised_by", ["_id", "first_name", "second_name", "email"]);
+    res.send(makeResponse(friendRequests))
+  } catch (error) {
+    console.log("errr ::: ", error);
+    internalErr(res);
+  }
+}
+
+/**
+ * @route
+ * @param {Object} req
+ * @param {Object} res
+ * @description this will fetch pending requests which raised by user
+ */
+const getAllRequestsRaisedByUser = async ({ user: { id } }, res) => {
+  try {
+    const friendRequests = await FriendRequest.find({ raised_by: id, status: "created" }).populate("raised_to", ["_id", "first_name", "second_name", "email"]);
+    res.send(makeResponse(friendRequests))
+  } catch (error) {
+    console.log("errr ::: ", error);
+    internalErr(res);
+  }
+}
+
 // /**
 //  * @route
 //  * @param {Object} req
@@ -63,4 +96,4 @@ const accept = async ({ params: { request_id } }, res) => {
 //     }
 // };
 
-module.exports = { create, accept };
+module.exports = { create, accept, getAllPendingRequests, getAllRequestsRaisedByUser };
