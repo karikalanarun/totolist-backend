@@ -1,5 +1,6 @@
 const { internalErr, makeResponse } = require("../utils");
 const TodoList = require("./todolist.model");
+const User = require("../user/user.model")
 
 /**
  * @route
@@ -9,8 +10,10 @@ const TodoList = require("./todolist.model");
  */
 const create = async ({ body: { title, todos }, user: { id: created_by } }, res) => {
     try {
+        const session = await User.startSession();
         const todoList = new TodoList({ title, todos, created_by })
-        await todoList.save();
+        await todoList.save({ session });
+        await User.updateOne({ _id: created_by }, { $push: { todos: todoList.id } }).session(session)
         res.send(makeResponse({ created: todoList.id }))
     } catch (error) {
         console.log("errr ::: ", error)
@@ -73,7 +76,7 @@ const updateTodo = async ({ body: { text_history, todos, completed }, params: { 
  * @param {Object} res 
  * @description this will update the list
  */
-const update = async ({ body: { title, todos }, params: { list_id } }, res) => {
+const update = async ({ body: { title, todos }, params: { list_id } },) => {
     try {
         await TodoList.updateOne({ _id: list_id }, { title, todos })
         res.send(makeResponse({ udpated: list_id }))
@@ -92,7 +95,9 @@ const update = async ({ body: { title, todos }, params: { list_id } }, res) => {
  */
 const remove = async ({ params: { list_id } }, res) => {
     try {
+        const session = await User.startSession();
         await TodoList.deleteOne({ _id: list_id })
+        await User.updateOne({ _id: created_by }, { $pull: { todos: todoList.id } }).session(session)
         res.send(makeResponse({ deleted: list_id }))
     } catch (error) {
         console.log("errr ::: ", error)
@@ -117,5 +122,17 @@ const getTodoListsOfUser = async ({ user: { id: created_by } }, res) => {
 }
 
 
+const getTodoListOfFriends = async ({ user: { id } }, res) => {
+    try {
+        const friendIds = await User.findById(id, "friends");
+        const todoLists = await TodoList.find({ created_by: { $in: friendIds } }).populate("created_by", ["id", "email", "first_name", "second_name"])
+        res.send(makeResponse(todoLists))
+    } catch (error) {
+        console.log("error ::: ", error)
+        internalErr(res);
+    }
+}
 
-module.exports = { create, updateTitle, update, remove, getTodoListsOfUser }
+
+
+module.exports = { create, updateTitle, update, remove, getTodoListsOfUser, getTodoListOfFriends }

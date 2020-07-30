@@ -23,7 +23,19 @@ const getAllNonFriendUsers = async ({ user: { id } }, res) => {
   }
 }
 
+const getAllFriends = async ({ user: { id } }, res) => {
+  try {
+    const user = await User.findById(id, "friends").populate("friends", ["id", "first_name", "second_name", "email"]);
+    console.log("user ::: ", user)
+    res.send(makeResponse(user.friends))
+  } catch (error) {
+    console.log("error ::: ", error)
+    internalErr(res);
+  }
+}
+
 module.exports = {
   getAllUsers,
-  getAllNonFriendUsers
+  getAllNonFriendUsers,
+  getAllFriends
 };
