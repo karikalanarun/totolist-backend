@@ -36,10 +36,10 @@ const accept = async ({ params: { request_id } }, res) => {
     // update the friend list of user who raised the request
     const session = await User.startSession();
     await User.updateOne({ _id: friendRequest.raised_by }, { $push: { friends: friendRequest.raised_to } }).session(session)
+    // update the friend list of user who accepted the request
     await User.updateOne({ _id: friendRequest.raised_to }, { $push: { friends: friendRequest.raised_by } }).session(session)
     await friendRequest.update({ status: "accepted" }).session(session);
     res.send(makeResponse({ accepted: request_id }));
-    // update the friend list of user who accepted the request
   } catch (error) {
     console.log("errr ::: ", error);
     internalErr(res);
