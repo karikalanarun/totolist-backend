@@ -15,7 +15,7 @@ const getAllNonFriendUsers = async ({ user: { id } }, res) => {
     const users = await User.find({
       _id: { $nin: [id] },
       friends: { $nin: [id] }
-    }, "_id first_name second_name email");
+    }, "_id first_name last_name second_name email");
     res.send(makeResponse(users));
   } catch (error) {
     console.log("error ::: ", error)

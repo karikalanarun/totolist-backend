@@ -1,12 +1,21 @@
 const User = require("./user.model");
 
 /**
- * @function getAllWatchingIssueIds
+ * @function getFriendsIds
  * @param {String} userId
  * @return {Promise<[{watching_issues: []String}]>}
  */
-const getAllWatchingIssueIds = (userId) => {
-    return User.findById(userId, 'watching_issues')
+const getFriendsIds = (userId) => {
+    return User.findById(userId, 'friends')
 }
 
-module.exports = { getAllWatchingIssueIds }
+/**
+ * @function getFriendsIds
+ * @param {String} userId
+ * @return {Promise<[{watching_issues: []String}]>}
+ */
+const getUser = (userId) => {
+    return User.findById(userId, 'id email first_name last_name')
+}
+
+module.exports = { getFriendsIds, getUser }

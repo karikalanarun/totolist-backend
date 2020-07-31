@@ -76,7 +76,7 @@ const updateTodo = async ({ body: { text_history, todos, completed }, params: { 
  * @param {Object} res 
  * @description this will update the list
  */
-const update = async ({ body: { title, todos }, params: { list_id } },) => {
+const update = async ({ body: { title, todos }, params: { list_id } }, res) => {
     try {
         await TodoList.updateOne({ _id: list_id }, { title, todos })
         res.send(makeResponse({ udpated: list_id }))
@@ -96,8 +96,9 @@ const update = async ({ body: { title, todos }, params: { list_id } },) => {
 const remove = async ({ params: { list_id } }, res) => {
     try {
         const session = await User.startSession();
-        await TodoList.deleteOne({ _id: list_id })
-        await User.updateOne({ _id: created_by }, { $pull: { todos: todoList.id } }).session(session)
+        const todoList = TodoList.findById(list_id)
+        await TodoList.deleteOne({ _id: list_id }).session(session)
+        await User.updateOne({ _id: todoList.created_by }, { $pull: { todos: todoList.id } }).session(session)
         res.send(makeResponse({ deleted: list_id }))
     } catch (error) {
         console.log("errr ::: ", error)
@@ -124,8 +125,9 @@ const getTodoListsOfUser = async ({ user: { id: created_by } }, res) => {
 
 const getTodoListOfFriends = async ({ user: { id } }, res) => {
     try {
-        const friendIds = await User.findById(id, "friends");
-        const todoLists = await TodoList.find({ created_by: { $in: friendIds } }).populate("created_by", ["id", "email", "first_name", "second_name"])
+        const friendIds = (await User.findById(id, "friends")).friends;
+        console.log("friendIds ::: ", friendIds)
+        const todoLists = await TodoList.find({ created_by: { $in: friendIds.map(friend => friend._id) } }).populate("created_by", ["id", "email", "first_name", "second_name", "last_name"])
         res.send(makeResponse(todoLists))
     } catch (error) {
         console.log("error ::: ", error)
